@@ -1,1 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Luxury Fashion Finder - Trouvez les meilleurs produits de luxe">
+    <title>Luxury Fashion Finder - Catalogue de Produits de Luxe</title>
+    
+    <!-- Fonts Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">Luxury Fashion Finder</h1>
+            <p class="tagline">Votre assistant personnel pour le luxe</p>
+        </div>
+    </header>
 
+    <!-- Search Section -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-box">
+                <input type="text" 
+                       id="searchInput" 
+                       class="search-input" 
+                       placeholder="Que recherchez-vous ? (ex: sac C.P. Company, pantalon taille 48...)">
+                <button class="search-btn" onclick="performSearch()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Filtres rapides -->
+            <div class="quick-filters">
+                <button class="filter-chip active" data-filter="all">Tout</button>
+                <button class="filter-chip" data-filter="Borse a tracolla">Sacs</button>
+                <button class="filter-chip" data-filter="Felpe">Sweats</button>
+                <button class="filter-chip" data-filter="Giacche">Vestes</button>
+                <button class="filter-chip" data-filter="Giubbotti e Bomber">Blousons</button>
+                <button class="filter-chip" data-filter="Pantaloni">Pantalons</button>
+                <button class="filter-chip" data-filter="T-shirt">T-shirts</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="filters-section">
+        <div class="container">
+            <div class="filters-grid">
+                <!-- Filtre Marque -->
+                <div class="filter-group">
+                    <label for="brandFilter">Marque</label>
+                    <select id="brandFilter" class="filter-select">
+                        <option value="">Toutes les marques</option>
+                        <option value="C.P. COMPANY">C.P. Company</option>
+                    </select>
+                </div>
+                
+                <!-- Filtre Taille -->
+                <div class="filter-group">
+                    <label for="sizeFilter">Taille</label>
+                    <select id="sizeFilter" class="filter-select">
+                        <option value="">Toutes les tailles</option>
+                        <option value="UNI">Unique</option>
+                        <optgroup label="Tailles lettres">
+                            <option value="XXS">XXS</option>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                        </optgroup>
+                        <optgroup label="Tailles numériques">
+                            <option value="38">38</option>
+                            <option value="40">40</option>
+                            <option value="42">42</option>
+                            <option value="44">44</option>
+                            <option value="46">46</option>
+                            <option value="48">48</option>
+                            <option value="50">50</option>
+                            <option value="52">52</option>
+                            <option value="54">54</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <!-- Filtre Prix -->
+                <div class="filter-group">
+                    <label for="priceRange">Prix maximum</label>
+                    <input type="range" id="priceRange" min="0" max="2000" value="2000" class="price-slider">
+                    <span id="priceValue" class="price-value">2000 €</span>
+                </div>
+                
+                <!-- Bouton Reset -->
+                <div class="filter-group">
+                    <button class="reset-filters" onclick="resetFilters()">Réinitialiser</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section">
+        <div class="container">
+            <div class="results-header">
+                <h2 id="resultsTitle">Tous les produits</h2>
+                <span id="resultsCount" class="results-count">0 produits</span>
+            </div>
+            
+            <!-- Products Grid -->
+            <div id="productsGrid" class="products-grid">
+                <!-- Les produits seront injectés ici par JavaScript -->
+            </div>
+            
+            <!-- Loading -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+            
+            <!-- No results -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <p>Aucun produit ne correspond à votre recherche.</p>
+                <button onclick="resetFilters()">Voir tous les produits</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modalBody" class="modal-body">
+                <!-- Détails du produit injectés ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Luxury Fashion Finder. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/catalog.js"></script>
+    <script src="js/search.js"></script>
+</body>
+</html>
