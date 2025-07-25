@@ -230,10 +230,10 @@ function createProductCard(product) {
     card.onclick = () => showProductModal(product);
     
     // Image placeholder si pas d'image
-    const imageUrl = product.image_url || 'images/placeholder.jpg';
+    const imageUrl = product.image_url || 'images/placeholder.svg';
     
     card.innerHTML = `
-        <img src="${imageUrl}" alt="${product.name}" class="product-image" onerror="this.src='images/placeholder.jpg'">
+        <img src="${imageUrl}" alt="${product.name}" class="product-image" onerror="this.src='images/placeholder.svg'">
         <div class="product-info">
             <div class="product-brand">${product.brand}</div>
             <h3 class="product-name">${product.name}</h3>
@@ -253,12 +253,12 @@ function showProductModal(product) {
     const modal = document.getElementById('productModal');
     const modalBody = document.getElementById('modalBody');
     
-    const imageUrl = product.image_url || 'images/placeholder.jpg';
+    const imageUrl = product.image_url || 'images/placeholder.svg';
     
     modalBody.innerHTML = `
         <div class="modal-grid">
             <div class="modal-image-container">
-                <img src="${imageUrl}" alt="${product.name}" class="modal-image" onerror="this.src='images/placeholder.jpg'">
+                <img src="${imageUrl}" alt="${product.name}" class="modal-image" onerror="this.src='images/placeholder.svg'">
             </div>
             <div class="modal-details">
                 <h2>${product.name}</h2>
