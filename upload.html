@@ -202,7 +202,6 @@
         .btn-primary:hover {
             background-color: var(--color-dark-gray);
         }
-
         .btn-primary:disabled {
             background-color: var(--color-gray);
             cursor: not-allowed;
@@ -339,12 +338,12 @@
             <h1 class="logo">Luxury Fashion Finder</h1>
             <p class="tagline">Gestionnaire de Catalogue Excel</p>
             <a href="index.html" style="
-        display: inline-block;
-        margin-top: 1rem;
-        color: var(--color-gold);
-        text-decoration: none;
-        font-size: 0.875rem;
-    ">← Retour au catalogue</a>
+                display: inline-block;
+                margin-top: 1rem;
+                color: var(--color-gold);
+                text-decoration: none;
+                font-size: 0.875rem;
+            ">← Retour au catalogue</a>
         </header>
 
         <!-- Upload Section -->
@@ -356,17 +355,134 @@
                     <label class="form-label" for="brandSelect">Marque</label>
                     <select id="brandSelect" class="form-select">
                         <option value="">Sélectionnez une marque</option>
-                        <option value="GUCCI">Gucci</option>
-                        <option value="LOUIS_VUITTON">Louis Vuitton</option>
-                        <option value="HERMES">Hermès</option>
-                        <option value="CHANEL">Chanel</option>
-                        <option value="DIOR">Dior</option>
-                        <option value="PRADA">Prada</option>
-                        <option value="BALENCIAGA">Balenciaga</option>
-                        <option value="SAINT_LAURENT">Saint Laurent</option>
-                        <option value="CP_COMPANY">C.P. Company</option>
-                        <option value="STONE_ISLAND">Stone Island</option>
-                        <option value="MONCLER">Moncler</option>
+                        <optgroup label="Haute Couture">
+                            <option value="CHANEL">Chanel</option>
+                            <option value="DIOR">Dior</option>
+                            <option value="HERMES">Hermès</option>
+                            <option value="LOUIS_VUITTON">Louis Vuitton</option>
+                            <option value="GUCCI">Gucci</option>
+                            <option value="PRADA">Prada</option>
+                            <option value="SAINT_LAURENT">Saint Laurent</option>
+                            <option value="CELINE">Céline</option>
+                            <option value="GIVENCHY">Givenchy</option>
+                            <option value="VALENTINO">Valentino</option>
+                            <option value="VERSACE">Versace</option>
+                            <option value="ARMANI">Giorgio Armani</option>
+                            <option value="DOLCE_GABBANA">Dolce & Gabbana</option>
+                            <option value="FENDI">Fendi</option>
+                            <option value="BURBERRY">Burberry</option>
+                        </optgroup>
+                        <optgroup label="Streetwear & Contemporary">
+                            <option value="BALENCIAGA">Balenciaga</option>
+                            <option value="OFF_WHITE">Off-White</option>
+                            <option value="VETEMENTS">Vetements</option>
+                            <option value="PALM_ANGELS">Palm Angels</option>
+                            <option value="FEAR_OF_GOD">Fear of God</option>
+                            <option value="AMIRI">Amiri</option>
+                            <option value="RHUDE">Rhude</option>
+                            <option value="SUPREME">Supreme</option>
+                            <option value="BAPE">A Bathing Ape</option>
+                            <option value="KITH">Kith</option>
+                        </optgroup>
+                        <optgroup label="Sportswear Premium">
+                            <option value="MONCLER">Moncler</option>
+                            <option value="CANADA_GOOSE">Canada Goose</option>
+                            <option value="STONE_ISLAND">Stone Island</option>
+                            <option value="CP_COMPANY">C.P. Company</option>
+                            <option value="MACKAGE">Mackage</option>
+                            <option value="WOOLRICH">Woolrich</option>
+                            <option value="PARAJUMPERS">Parajumpers</option>
+                        </optgroup>
+                        <optgroup label="Designers Avant-Garde">
+                            <option value="RICK_OWENS">Rick Owens</option>
+                            <option value="YOHJI_YAMAMOTO">Yohji Yamamoto</option>
+                            <option value="COMME_DES_GARCONS">Comme des Garçons</option>
+                            <option value="ISSEY_MIYAKE">Issey Miyake</option>
+                            <option value="MAISON_MARGIELA">Maison Margiela</option>
+                            <option value="ANN_DEMEULEMEESTER">Ann Demeulemeester</option>
+                            <option value="JULIUS">Julius</option>
+                            <option value="BORIS_BIDJAN_SABERI">Boris Bidjan Saberi</option>
+                        </optgroup>
+                        <optgroup label="Accessoires & Maroquinerie">
+                            <option value="BOTTEGA_VENETA">Bottega Veneta</option>
+                            <option value="LOEWE">Loewe</option>
+                            <option value="CHLOE">Chloé</option>
+                            <option value="MULBERRY">Mulberry</option>
+                            <option value="GOYARD">Goyard</option>
+                            <option value="MOYNAT">Moynat</option>
+                            <option value="DELVAUX">Delvaux</option>
+                            <option value="JUDITH_LEIBER">Judith Leiber</option>
+                        </optgroup>
+                        <optgroup label="Chaussures de Luxe">
+                            <option value="CHRISTIAN_LOUBOUTIN">Christian Louboutin</option>
+                            <option value="JIMMY_CHOO">Jimmy Choo</option>
+                            <option value="MANOLO_BLAHNIK">Manolo Blahnik</option>
+                            <option value="GIUSEPPE_ZANOTTI">Giuseppe Zanotti</option>
+                            <option value="RENE_CAOVILLA">René Caovilla</option>
+                            <option value="AQUAZZURA">Aquazzura</option>
+                            <option value="GIANVITO_ROSSI">Gianvito Rossi</option>
+                            <option value="ROGER_VIVIER">Roger Vivier</option>
+                        </optgroup>
+                        <optgroup label="Bijoux & Horlogerie">
+                            <option value="CARTIER">Cartier</option>
+                            <option value="BULGARI">Bulgari</option>
+                            <option value="VAN_CLEEF">Van Cleef & Arpels</option>
+                            <option value="TIFFANY">Tiffany & Co.</option>
+                            <option value="CHOPARD">Chopard</option>
+                            <option value="BOUCHERON">Boucheron</option>
+                            <option value="PIAGET">Piaget</option>
+                            <option value="ROLEX">Rolex</option>
+                            <option value="PATEK_PHILIPPE">Patek Philippe</option>
+                            <option value="AUDEMARS_PIGUET">Audemars Piguet</option>
+                        </optgroup>
+                        <optgroup label="Marques Émergentes">
+                            <option value="JACQUEMUS">Jacquemus</option>
+                            <option value="GANNI">Ganni</option>
+                            <option value="STAUD">Staud</option>
+                            <option value="NANUSHKA">Nanushka</option>
+                            <option value="REJINA_PYO">Rejina Pyo</option>
+                            <option value="ROTATE">Rotate</option>
+                            <option value="RIXO">Rixo</option>
+                            <option value="THE_ATTICO">The Attico</option>
+                        </optgroup>
+                        <optgroup label="Mode Homme">
+                            <option value="TOM_FORD">Tom Ford</option>
+                            <option value="BERLUTI">Berluti</option>
+                            <option value="BRUNELLO_CUCINELLI">Brunello Cucinelli</option>
+                            <option value="KITON">Kiton</option>
+                            <option value="LORO_PIANA">Loro Piana</option>
+                            <option value="BRIONI">Brioni</option>
+                            <option value="ZEGNA">Ermenegildo Zegna</option>
+                            <option value="CANALI">Canali</option>
+                            <option value="CORNELIANI">Corneliani</option>
+                        </optgroup>
+                        <optgroup label="Américaines">
+                            <option value="RALPH_LAUREN">Ralph Lauren</option>
+                            <option value="CALVIN_KLEIN">Calvin Klein</option>
+                            <option value="TOMMY_HILFIGER">Tommy Hilfiger</option>
+                            <option value="MICHAEL_KORS">Michael Kors</option>
+                            <option value="MARC_JACOBS">Marc Jacobs</option>
+                            <option value="COACH">Coach</option>
+                            <option value="KATE_SPADE">Kate Spade</option>
+                            <option value="TORY_BURCH">Tory Burch</option>
+                        </optgroup>
+                        <optgroup label="Autres Marques Premium">
+                            <option value="ALEXANDER_MCQUEEN">Alexander McQueen</option>
+                            <option value="STELLA_MCCARTNEY">Stella McCartney</option>
+                            <option value="KENZO">Kenzo</option>
+                            <option value="ACNE_STUDIOS">Acne Studios</option>
+                            <option value="ISABEL_MARANT">Isabel Marant</option>
+                            <option value="BALMAIN">Balmain</option>
+                            <option value="DSQUARED2">Dsquared2</option>
+                            <option value="GOLDEN_GOOSE">Golden Goose</option>
+                            <option value="MIUMIU">Miu Miu</option>
+                            <option value="ETRO">Etro</option>
+                            <option value="MISSONI">Missoni</option>
+                            <option value="ROBERTO_CAVALLI">Roberto Cavalli</option>
+                            <option value="PHILIPP_PLEIN">Philipp Plein</option>
+                            <option value="MCM">MCM</option>
+                            <option value="FURLA">Furla</option>
+                        </optgroup>
                         <option value="OTHER">Autre marque...</option>
                     </select>
                 </div>
@@ -436,6 +552,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/catalog-excel.js"></script>
     <script>
         // État de l'application
         let selectedFile = null;
@@ -459,7 +576,6 @@
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
         const historyTable = document.getElementById('historyTable');
-
         // Event Listeners
         brandSelect.addEventListener('change', handleBrandChange);
         customBrand.addEventListener('input', validateForm);
@@ -556,10 +672,16 @@
                 const data = await readExcelFile(selectedFile);
                 parsedData = data;
                 
+                // Afficher les colonnes trouvées dans la console pour debug
+                if (data && data.length > 0) {
+                    console.log('Colonnes trouvées:', data[0]);
+                    console.log('Première ligne de données:', data[1]);
+                }
+                
                 showProgress(50, 'Analyse des données...');
-    
+                
                 // Valider les données
-const validation = excelManager.validateExcelData(data);
+                const validation = validateExcelData(data);
                 if (!validation.valid) {
                     showError(`Erreur dans le fichier: ${validation.message}`);
                     hideProgress();
@@ -570,6 +692,12 @@ const validation = excelManager.validateExcelData(data);
                 
                 // Convertir au format JSON
                 const products = convertToProductFormat(data, brand);
+                
+                if (products.length === 0) {
+                    showError('Aucun produit valide trouvé dans le fichier. Vérifiez que votre fichier contient des données.');
+                    hideProgress();
+                    return;
+                }
                 
                 showProgress(90, 'Sauvegarde...');
                 
@@ -619,68 +747,12 @@ const validation = excelManager.validateExcelData(data);
 
         // Validation des données Excel
         function validateExcelData(data) {
-            if (!data || data.length < 2) {
-                return { valid: false, message: 'Le fichier est vide ou ne contient pas de données' };
-            }
-            
-            // Vérifier les colonnes minimales requises
-            const headers = data[0];
-            const requiredColumns = ['référence', 'nom', 'catégorie', 'prix'];
-            const missingColumns = requiredColumns.filter(col => 
-                !headers.some(h => h && h.toString().toLowerCase().includes(col))
-            );
-            
-            if (missingColumns.length > 0) {
-                return { 
-                    valid: false, 
-                    message: `Colonnes manquantes: ${missingColumns.join(', ')}` 
-                };
-            }
-            
-            return { valid: true };
+            return excelManager.validateExcelData(data);
         }
 
         // Conversion au format produit
-        // Convertir au format JSON
-const products = excelManager.normalizeExcelData(data, brand);
-            const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
-            const products = [];
-            
-            // Mapper les colonnes
-            const columnMap = {
-                reference: headers.findIndex(h => h.includes('référence') || h.includes('ref')),
-                name: headers.findIndex(h => h.includes('nom') || h.includes('name') || h.includes('produit')),
-                category: headers.findIndex(h => h.includes('catégorie') || h.includes('category')),
-                price: headers.findIndex(h => h.includes('prix') || h.includes('price')),
-                color: headers.findIndex(h => h.includes('couleur') || h.includes('color')),
-                size: headers.findIndex(h => h.includes('taille') || h.includes('size')),
-                quantity: headers.findIndex(h => h.includes('quantité') || h.includes('quantity') || h.includes('stock'))
-            };
-            // Parcourir les lignes (skip header)
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (!row || row.length === 0) continue;
-                
-                const product = {
-                    id: `${brand}_${i}`,
-                    brand: brand,
-                    reference: row[columnMap.reference] || '',
-                    name: row[columnMap.name] || '',
-                    category: row[columnMap.category] || '',
-                    price: parseFloat(row[columnMap.price]) || 0,
-                    color: row[columnMap.color] || '',
-                    size: row[columnMap.size] || '',
-                    quantity: parseInt(row[columnMap.quantity]) || 0,
-                    imported_at: new Date().toISOString()
-                };
-                
-                // Valider le produit
-                if (product.reference && product.name) {
-                    products.push(product);
-                }
-            }
-            
-            return products;
+        function convertToProductFormat(data, brand) {
+            return excelManager.normalizeExcelData(data, brand);
         }
 
         // Sauvegarde des produits
@@ -720,6 +792,7 @@ const products = excelManager.normalizeExcelData(data, brand);
             localStorage.setItem('importHistory', JSON.stringify(history));
             displayHistory();
         }
+
         // Affichage de l'historique
         function displayHistory() {
             const history = JSON.parse(localStorage.getItem('importHistory') || '[]');
@@ -755,6 +828,7 @@ const products = excelManager.normalizeExcelData(data, brand);
                 </tr>
             `).join('');
         }
+
         // Affichage du catalogue
         function viewCatalog(brand) {
             // Rediriger vers la page principale avec le filtre de marque
@@ -781,13 +855,6 @@ const products = excelManager.normalizeExcelData(data, brand);
             progressFill.style.width = '0%';
         }
 
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.classList.add('active');
-            setTimeout(() => {
-                successMessage.classList.remove('active');
-            }, 5000);
-        }
         function showSuccess(message) {
             successMessage.textContent = message;
             successMessage.classList.add('active');
@@ -822,7 +889,5 @@ const products = excelManager.normalizeExcelData(data, brand);
         // Initialisation
         displayHistory();
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/catalog-excel.js"></script>
 </body>
 </html>
