@@ -1,481 +1,818 @@
-/**
- * catalog-excel.js - Module d'intégration Excel pour Luxury Fashion Finder
- * Gère l'import, la conversion et la recherche dans les catalogues Excel
- */
-
-class ExcelCatalogManager {
-    constructor() {
-        this.storageKey = 'luxuryProducts';
-        this.historyKey = 'importHistory';
-        this.brandMappings = {
-            'GUCCI': ['gucci', 'guccio gucci'],
-            'LOUIS_VUITTON': ['louis vuitton', 'lv', 'vuitton'],
-            'HERMES': ['hermès', 'hermes'],
-            'CHANEL': ['chanel', 'coco chanel'],
-            'DIOR': ['dior', 'christian dior'],
-            'PRADA': ['prada'],
-            'BALENCIAGA': ['balenciaga'],
-            'SAINT_LAURENT': ['saint laurent', 'ysl', 'yves saint laurent'],
-            'CP_COMPANY': ['cp company', 'c.p. company', 'cp'],
-            'STONE_ISLAND': ['stone island', 'stone'],
-            'MONCLER': ['moncler']
-        };
-    }
-
-    /**
-     * Charge tous les produits depuis le localStorage et les fichiers JSON
-     */
-    async loadAllProducts() {
-        const products = [];
-        
-        // 1. Charger les produits depuis les fichiers JSON existants
-        try {
-            const jsonProducts = await this.loadJSONProducts();
-            products.push(...jsonProducts);
-        } catch (error) {
-            console.error('Erreur lors du chargement des fichiers JSON:', error);
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Excel - Luxury Fashion Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        // 2. Charger les produits depuis le localStorage (imports Excel)
-        const storedData = this.getStoredProducts();
-        Object.values(storedData).forEach(brandData => {
-            if (brandData.products) {
-                products.push(...brandData.products);
-            }
-        });
-        
-        return products;
-    }
 
-    /**
-     * Charge les produits depuis les fichiers JSON
-     */
-    async loadJSONProducts() {
-        const products = [];
-        const dataFiles = ['data/cp-company.json'];
-        
-        const promises = dataFiles.map(file => 
-            fetch(file)
-                .then(response => response.json())
-                .catch(error => {
-                    console.error(`Erreur lors du chargement de ${file}:`, error);
-                    return null;
-                })
-        );
-        
-        const results = await Promise.all(promises);
-        
-        results.forEach(data => {
-            if (data && data.products) {
-                data.products.forEach(product => {
-                    products.push({
-                        ...product,
-                        brand: data.brand,
-                        source: 'json'
-                    });
-                });
-            }
-        });
-        
-        return products;
-    }
+        :root {
+            --color-black: #000000;
+            --color-gold: #D4AF37;
+            --color-white: #FFFFFF;
+            --color-light: #FAFAFA;
+            --color-gray: #666666;
+            --color-dark-gray: #333333;
+            --color-border: #E0E0E0;
+            --color-success: #4CAF50;
+            --color-error: #f44336;
+            
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Montserrat', sans-serif;
+        }
 
-    /**
-     * Récupère les produits stockés dans le localStorage
-     */
-    getStoredProducts() {
-        return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
-    }
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-light);
+            color: var(--color-dark-gray);
+            line-height: 1.6;
+        }
 
-    /**
-     * Recherche intelligente dans les produits
-     */
-    searchProducts(query, products) {
-        const searchTerms = query.toLowerCase().split(' ');
-        const results = [];
-        
-        products.forEach(product => {
-            let score = 0;
-            
-            // Vérifier chaque terme de recherche
-            searchTerms.forEach(term => {
-                // Recherche dans le nom
-                if (product.name && product.name.toLowerCase().includes(term)) {
-                    score += 10;
-                }
-                
-                // Recherche dans la référence
-                if (product.reference && product.reference.toLowerCase().includes(term)) {
-                    score += 8;
-                }
-                
-                // Recherche dans la catégorie
-                if (product.category && product.category.toLowerCase().includes(term)) {
-                    score += 5;
-                }
-                if (product.category_fr && product.category_fr.toLowerCase().includes(term)) {
-                    score += 5;
-                }
-                
-                // Recherche dans la marque
-                if (product.brand && product.brand.toLowerCase().includes(term)) {
-                    score += 7;
-                }
-                
-                // Recherche dans la couleur
-                if (product.color && product.color.toLowerCase().includes(term)) {
-                    score += 3;
-                }
-                if (product.color_name && product.color_name.toLowerCase().includes(term)) {
-                    score += 3;
-                }
-                
-                // Recherche de marque avec synonymes
-                Object.entries(this.brandMappings).forEach(([brand, synonyms]) => {
-                    if (synonyms.some(syn => syn.includes(term))) {
-                        if (product.brand === brand) {
-                            score += 7;
-                        }
-                    }
-                });
-            });
-            
-            if (score > 0) {
-                results.push({ product, score });
-            }
-        });
-        
-        // Trier par score décroissant
-        results.sort((a, b) => b.score - a.score);
-        
-        return results.map(r => r.product);
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
 
-    /**
-     * Recherche par question naturelle
-     */
-    answerQuestion(question, products) {
-        const q = question.toLowerCase();
-        
-        // Patterns de questions
-        const patterns = {
-            // Y a-t-il X ?
-            existence: /(?:y a-t-il|avez-vous|existe-t-il|as-tu|est-ce qu'il y a)/i,
-            // Combien de X ?
-            count: /(?:combien|nombre|quantité)/i,
-            // Quel est le prix de X ?
-            price: /(?:prix|coût|combien coûte|tarif)/i,
-            // Quelles tailles pour X ?
-            sizes: /(?:taille|size|pointure)/i,
-            // Quelle couleur pour X ?
-            colors: /(?:couleur|color|teinte)/i
-        };
-        
-        let response = {
-            found: false,
-            message: '',
-            products: []
-        };
-        
-        // Détecter le type de question
-        if (patterns.existence.test(q)) {
-            // Extraire le produit recherché
-            const productMatch = q.match(/(?:y a-t-il|avez-vous|existe-t-il|as-tu|est-ce qu'il y a)\s+(?:un|une|des|de la|du)?\s*(.+?)(?:\s*\?|$)/i);
-            
-            if (productMatch) {
-                const searchTerm = productMatch[1].trim();
-                const results = this.searchProducts(searchTerm, products);
-                
-                if (results.length > 0) {
-                    response.found = true;
-                    response.products = results;
-                    
-                    if (results.length === 1) {
-                        const p = results[0];
-                        response.message = `Oui, nous avons ${p.name} de ${p.brand} en stock. Prix: ${p.price_cost || p.price_retail}€`;
-                    } else {
-                        response.message = `Oui, nous avons ${results.length} produits correspondant à "${searchTerm}".`;
-                    }
-                } else {
-                    response.message = `Désolé, nous n'avons pas de "${searchTerm}" en stock actuellement.`;
-                }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 0.875rem;
+            font-weight: 300;
+            color: var(--color-gray);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background-color: var(--color-white);
+            border: 1px solid var(--color-border);
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 1px;
+        }
+
+        .form-select {
+            padding: 0.75rem;
+            border: 1px solid var(--color-border);
+            background-color: var(--color-white);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid var(--color-border);
+            font-family: var(--font-body);
+            font-size: 1rem;
+        }
+
+        /* Drag & Drop Zone */
+        .upload-zone {
+            border: 2px dashed var(--color-border);
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--color-light);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--color-gold);
+            background-color: rgba(212, 175, 55, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--color-gold);
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--color-gray);
+        }
+
+        .upload-text {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.875rem;
+            color: var(--color-gray);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* File Info */
+        .file-info {
+            display: none;
+            background-color: var(--color-light);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-details {
+            font-size: 0.875rem;
+            color: var(--color-gray);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--color-black);
+            color: var(--color-white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-dark-gray);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--color-gray);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--color-black);
+            border: 1px solid var(--color-black);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--color-black);
+            color: var(--color-white);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--color-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--color-gold);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--color-gray);
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .status-message.active {
+            display: block;
+        }
+
+        .status-message.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--color-success);
+            color: var(--color-success);
+        }
+
+        .status-message.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--color-error);
+            color: var(--color-error);
+        }
+
+        /* History Section */
+        .history-section {
+            background-color: var(--color-white);
+            border: 1px solid var(--color-border);
+            padding: 2rem;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .history-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--color-success);
+        }
+
+        .status-badge.inactive {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--color-error);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
             }
-        } else if (patterns.count.test(q)) {
-            // Compter les produits
-            const categoryMatch = q.match(/combien\s+(?:de|d')?\s*(.+?)(?:\s*\?|$)/i);
             
-            if (categoryMatch) {
-                const searchTerm = categoryMatch[1].trim();
-                const results = this.searchProducts(searchTerm, products);
-                
-                response.found = results.length > 0;
-                response.products = results;
-                response.message = `Nous avons ${results.length} ${searchTerm} en stock.`;
+            .button-group {
+                flex-direction: column;
             }
-        } else if (patterns.price.test(q)) {
-            // Prix d'un produit
-            const productMatch = q.match(/prix\s+(?:de|du|des|d')?\s*(.+?)(?:\s*\?|$)/i);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">Luxury Fashion Finder</h1>
+            <p class="tagline">Gestionnaire de Catalogue Excel</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <h2 class="section-title">Importer un Catalogue Excel</h2>
             
-            if (productMatch) {
-                const searchTerm = productMatch[1].trim();
-                const results = this.searchProducts(searchTerm, products);
+            <div class="upload-grid">
+                <div class="form-group">
+                    <label class="form-label" for="brandSelect">Marque</label>
+                    <select id="brandSelect" class="form-select">
+                        <option value="">Sélectionnez une marque</option>
+                        <option value="GUCCI">Gucci</option>
+                        <option value="LOUIS_VUITTON">Louis Vuitton</option>
+                        <option value="HERMES">Hermès</option>
+                        <option value="CHANEL">Chanel</option>
+                        <option value="DIOR">Dior</option>
+                        <option value="PRADA">Prada</option>
+                        <option value="BALENCIAGA">Balenciaga</option>
+                        <option value="SAINT_LAURENT">Saint Laurent</option>
+                        <option value="CP_COMPANY">C.P. Company</option>
+                        <option value="STONE_ISLAND">Stone Island</option>
+                        <option value="MONCLER">Moncler</option>
+                        <option value="OTHER">Autre marque...</option>
+                    </select>
+                </div>
                 
-                if (results.length > 0) {
-                    response.found = true;
-                    response.products = results;
-                    
-                    if (results.length === 1) {
-                        const p = results[0];
-                        response.message = `Le prix de ${p.name} est de ${p.price_cost || p.price_retail}€.`;
-                    } else {
-                        const prices = results.map(p => p.price_cost || p.price_retail);
-                        const minPrice = Math.min(...prices);
-                        const maxPrice = Math.max(...prices);
-                        response.message = `Les prix varient de ${minPrice}€ à ${maxPrice}€ pour "${searchTerm}".`;
-                    }
-                }
-            }
-        } else {
-            // Recherche générale
-            const results = this.searchProducts(q, products);
-            
-            if (results.length > 0) {
-                response.found = true;
-                response.products = results;
-                response.message = `J'ai trouvé ${results.length} produit(s) correspondant à votre recherche.`;
+                <div class="form-group" id="customBrandGroup" style="display: none;">
+                    <label class="form-label" for="customBrand">Nom de la marque</label>
+                    <input type="text" id="customBrand" class="form-input" placeholder="Entrez le nom de la marque">
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📊</div>
+                <div class="upload-text">Glissez votre fichier Excel ici</div>
+                <div class="upload-subtext">ou cliquez pour sélectionner un fichier (.xlsx, .xls)</div>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+            </div>
+
+            <!-- File Info -->
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-details" id="fileDetails"></div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Traitement en cours...</div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="status-message success" id="successMessage"></div>
+            <div class="status-message error" id="errorMessage"></div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button class="btn btn-primary" id="uploadBtn" disabled>Importer le catalogue</button>
+                <button class="btn btn-secondary" id="resetBtn">Réinitialiser</button>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section class="history-section">
+            <h2 class="section-title">Catalogues importés</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Marque</th>
+                        <th>Fichier</th>
+                        <th>Produits</th>
+                        <th>Date d'import</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--color-gray);">
+                            Aucun catalogue importé pour le moment
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // État de l'application
+        let selectedFile = null;
+        let selectedBrand = '';
+        let parsedData = null;
+
+        // Éléments DOM
+        const brandSelect = document.getElementById('brandSelect');
+        const customBrandGroup = document.getElementById('customBrandGroup');
+        const customBrand = document.getElementById('customBrand');
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileDetails = document.getElementById('fileDetails');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const historyTable = document.getElementById('historyTable');
+
+        // Event Listeners
+        brandSelect.addEventListener('change', handleBrandChange);
+        customBrand.addEventListener('input', validateForm);
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        uploadZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', processFile);
+        resetBtn.addEventListener('click', resetForm);
+
+        // Gestion de la sélection de marque
+        function handleBrandChange(e) {
+            const value = e.target.value;
+            if (value === 'OTHER') {
+                customBrandGroup.style.display = 'block';
+                selectedBrand = '';
             } else {
-                response.message = `Je n'ai pas trouvé de produits correspondant à "${q}".`;
+                customBrandGroup.style.display = 'none';
+                selectedBrand = value;
+            }
+            validateForm();
+        }
+
+        // Gestion du drag & drop
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
             }
         }
-        
-        return response;
-    }
 
-    /**
-     * Convertit les données Excel importées au format standard
-     */
-    normalizeExcelData(excelData, brand) {
-        // Détection automatique du format
-        const format = this.detectExcelFormat(excelData);
-        
-        switch (format) {
-            case 'standard':
-                return this.convertStandardFormat(excelData, brand);
-            case 'custom':
-                return this.convertCustomFormat(excelData, brand);
-            default:
-                throw new Error('Format de fichier non reconnu');
+        // Gestion de la sélection de fichier
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
         }
-    }
 
-    /**
-     * Détecte le format du fichier Excel
-     */
-    detectExcelFormat(data) {
-        if (!data || data.length < 2) return 'unknown';
-        
-        const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
-        
-        // Format standard : référence, nom, catégorie, prix
-        if (headers.some(h => h.includes('référence')) && 
-            headers.some(h => h.includes('nom')) &&
-            headers.some(h => h.includes('prix'))) {
-            return 'standard';
-        }
-        
-        // Format personnalisé : à adapter selon vos besoins
-        return 'custom';
-    }
-
-    /**
-     * Convertit le format standard
-     */
-    convertStandardFormat(data, brand) {
-        const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
-        const products = [];
-        
-        // Mapper les colonnes
-        const columnMap = {
-            reference: headers.findIndex(h => h.includes('référence') || h.includes('ref') || h.includes('sku')),
-            name: headers.findIndex(h => h.includes('nom') || h.includes('name') || h.includes('produit') || h.includes('article')),
-            category: headers.findIndex(h => h.includes('catégorie') || h.includes('category') || h.includes('type')),
-            price_retail: headers.findIndex(h => h.includes('prix achat') || h.includes('prix revient') || h.includes('cost')),
-            price_cost: headers.findIndex(h => h.includes('prix vente') || h.includes('prix') || h.includes('price')),
-            color: headers.findIndex(h => h.includes('couleur') || h.includes('color')),
-            sizes: headers.findIndex(h => h.includes('taille') || h.includes('size')),
-            quantity: headers.findIndex(h => h.includes('quantité') || h.includes('quantity') || h.includes('stock'))
-        };
-        
-        // Parcourir les lignes
-        for (let i = 1; i < data.length; i++) {
-            const row = data[i];
-            if (!row || row.length === 0) continue;
+        // Traitement du fichier
+        function handleFile(file) {
+            const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            const fileType = file.type || 'application/octet-stream';
             
-            const product = {
-                id: `${brand}_EXCEL_${i}`,
+            if (!validTypes.includes(fileType) && !file.name.match(/\.(xlsx|xls)$/i)) {
+                showError('Veuillez sélectionner un fichier Excel valide (.xlsx ou .xls)');
+                return;
+            }
+
+            selectedFile = file;
+            displayFileInfo(file);
+            validateForm();
+        }
+
+        // Affichage des informations du fichier
+        function displayFileInfo(file) {
+            fileName.textContent = file.name;
+            fileDetails.textContent = `Taille: ${formatFileSize(file.size)} | Type: ${file.name.split('.').pop().toUpperCase()}`;
+            fileInfo.classList.add('active');
+        }
+
+        // Validation du formulaire
+        function validateForm() {
+            const brandValid = selectedBrand || (brandSelect.value === 'OTHER' && customBrand.value.trim());
+            const fileValid = selectedFile !== null;
+            
+            uploadBtn.disabled = !(brandValid && fileValid);
+        }
+
+        // Traitement du fichier Excel
+        async function processFile() {
+            if (!selectedFile) return;
+
+            const brand = brandSelect.value === 'OTHER' ? customBrand.value.trim() : selectedBrand;
+            
+            showProgress(0, 'Lecture du fichier...');
+            
+            try {
+                // Lire le fichier
+                const data = await readExcelFile(selectedFile);
+                parsedData = data;
+                
+                showProgress(50, 'Analyse des données...');
+                
+                // Valider les données
+                const validation = validateExcelData(data);
+                if (!validation.valid) {
+                    showError(`Erreur dans le fichier: ${validation.message}`);
+                    hideProgress();
+                    return;
+                }
+                
+                showProgress(75, 'Conversion des données...');
+                
+                // Convertir au format JSON
+                const products = convertToProductFormat(data, brand);
+                
+                showProgress(90, 'Sauvegarde...');
+                
+                // Sauvegarder les données
+                saveProducts(brand, products);
+                
+                showProgress(100, 'Terminé!');
+                
+                setTimeout(() => {
+                    showSuccess(`${products.length} produits importés avec succès pour ${brand}`);
+                    updateHistory(brand, selectedFile.name, products.length);
+                    hideProgress();
+                    resetForm();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError(`Erreur lors du traitement: ${error.message}`);
+                hideProgress();
+            }
+        }
+
+        // Lecture du fichier Excel
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Prendre la première feuille
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Validation des données Excel
+        function validateExcelData(data) {
+            if (!data || data.length < 2) {
+                return { valid: false, message: 'Le fichier est vide ou ne contient pas de données' };
+            }
+            
+            // Vérifier les colonnes minimales requises
+            const headers = data[0];
+            const requiredColumns = ['référence', 'nom', 'catégorie', 'prix'];
+            const missingColumns = requiredColumns.filter(col => 
+                !headers.some(h => h && h.toString().toLowerCase().includes(col))
+            );
+            
+            if (missingColumns.length > 0) {
+                return { 
+                    valid: false, 
+                    message: `Colonnes manquantes: ${missingColumns.join(', ')}` 
+                };
+            }
+            
+            return { valid: true };
+        }
+
+        // Conversion au format produit
+        function convertToProductFormat(data, brand) {
+            const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
+            const products = [];
+            
+            // Mapper les colonnes
+            const columnMap = {
+                reference: headers.findIndex(h => h.includes('référence') || h.includes('ref')),
+                name: headers.findIndex(h => h.includes('nom') || h.includes('name') || h.includes('produit')),
+                category: headers.findIndex(h => h.includes('catégorie') || h.includes('category')),
+                price: headers.findIndex(h => h.includes('prix') || h.includes('price')),
+                color: headers.findIndex(h => h.includes('couleur') || h.includes('color')),
+                size: headers.findIndex(h => h.includes('taille') || h.includes('size')),
+                quantity: headers.findIndex(h => h.includes('quantité') || h.includes('quantity') || h.includes('stock'))
+            };
+            // Parcourir les lignes (skip header)
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const product = {
+                    id: `${brand}_${i}`,
+                    brand: brand,
+                    reference: row[columnMap.reference] || '',
+                    name: row[columnMap.name] || '',
+                    category: row[columnMap.category] || '',
+                    price: parseFloat(row[columnMap.price]) || 0,
+                    color: row[columnMap.color] || '',
+                    size: row[columnMap.size] || '',
+                    quantity: parseInt(row[columnMap.quantity]) || 0,
+                    imported_at: new Date().toISOString()
+                };
+                
+                // Valider le produit
+                if (product.reference && product.name) {
+                    products.push(product);
+                }
+            }
+            
+            return products;
+        }
+
+        // Sauvegarde des produits
+        function saveProducts(brand, products) {
+            // Récupérer les données existantes
+            const existingData = JSON.parse(localStorage.getItem('luxuryProducts') || '{}');
+            
+            // Ajouter ou remplacer les produits de cette marque
+            existingData[brand] = {
                 brand: brand,
-                reference: row[columnMap.reference] || `${brand}_${i}`,
-                name: row[columnMap.name] || 'Produit sans nom',
-                category: row[columnMap.category] || 'Non catégorisé',
-                category_fr: this.translateCategory(row[columnMap.category]),
-                price_retail: parseFloat(row[columnMap.price_retail]) || 0,
-                price_cost: parseFloat(row[columnMap.price_cost]) || 0,
-                currency: 'EUR',
-                color_name: row[columnMap.color] || '',
-                sizes_available: this.parseSizes(row[columnMap.sizes]),
-                quantity_total: parseInt(row[columnMap.quantity]) || 0,
-                source: 'excel',
-                active: true,
-                imported_at: new Date().toISOString()
+                products: products,
+                lastUpdate: new Date().toISOString(),
+                totalProducts: products.length
             };
             
-            // Valider le produit
-            if (product.reference && product.name !== 'Produit sans nom') {
-                products.push(product);
+            // Sauvegarder
+            localStorage.setItem('luxuryProducts', JSON.stringify(existingData));
+        }
+
+        // Mise à jour de l'historique
+        function updateHistory(brand, fileName, productCount) {
+            const history = JSON.parse(localStorage.getItem('importHistory') || '[]');
+            
+            history.unshift({
+                brand: brand,
+                fileName: fileName,
+                productCount: productCount,
+                date: new Date().toISOString(),
+                status: 'active'
+            });
+            
+            // Garder seulement les 10 derniers imports
+            if (history.length > 10) {
+                history.pop();
             }
+            
+            localStorage.setItem('importHistory', JSON.stringify(history));
+            displayHistory();
         }
-        
-        return products;
-    }
-
-    /**
-     * Parse les tailles
-     */
-    parseSizes(sizeString) {
-        if (!sizeString) return ['UNI'];
-        
-        const sizes = sizeString.toString()
-            .split(/[,;\/]/)
-            .map(s => s.trim())
-            .filter(s => s);
-        
-        return sizes.length > 0 ? sizes : ['UNI'];
-    }
-
-    /**
-     * Traduit les catégories
-     */
-    translateCategory(category) {
-        if (!category) return 'Non catégorisé';
-        
-        const translations = {
-            'bag': 'Sacs',
-            'bags': 'Sacs',
-            'sac': 'Sacs',
-            'sweat': 'Sweats',
-            'sweater': 'Sweats',
-            'hoodie': 'Sweats',
-            'jacket': 'Vestes',
-            'veste': 'Vestes',
-            'coat': 'Manteaux',
-            'pants': 'Pantalons',
-            'pantalon': 'Pantalons',
-            'jeans': 'Jeans',
-            'shirt': 'Chemises',
-            'tshirt': 'T-shirts',
-            't-shirt': 'T-shirts',
-            'shoes': 'Chaussures',
-            'sneakers': 'Baskets',
-            'accessories': 'Accessoires'
-        };
-        
-        const categoryLower = category.toLowerCase();
-        
-        for (const [key, value] of Object.entries(translations)) {
-            if (categoryLower.includes(key)) {
-                return value;
+        // Affichage de l'historique
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('importHistory') || '[]');
+            
+            if (history.length === 0) {
+                historyTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--color-gray);">
+                            Aucun catalogue importé pour le moment
+                        </td>
+                    </tr>
+                `;
+                return;
             }
+            
+            historyTable.innerHTML = history.map(item => `
+                <tr>
+                    <td>${item.brand}</td>
+                    <td>${item.fileName}</td>
+                    <td>${item.productCount}</td>
+                    <td>${new Date(item.date).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <span class="status-badge ${item.status}">
+                            ${item.status === 'active' ? 'Actif' : 'Inactif'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;" 
+                                onclick="viewCatalog('${item.brand}')">
+                            Voir
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
         }
-        
-        return category;
-    }
-
-    /**
-     * Exporte les produits au format Excel
-     */
-    exportToExcel(brand = null) {
-        const products = brand ? 
-            this.getStoredProducts()[brand]?.products || [] :
-            Object.values(this.getStoredProducts()).flatMap(b => b.products || []);
-        
-        if (products.length === 0) {
-            alert('Aucun produit à exporter');
-            return;
+        // Affichage du catalogue
+        function viewCatalog(brand) {
+            // Rediriger vers la page principale avec le filtre de marque
+            window.location.href = `index.html?brand=${encodeURIComponent(brand)}`;
         }
-        
-        // Créer les données pour Excel
-        const headers = [
-            'Référence', 'Nom', 'Marque', 'Catégorie', 
-            'Prix Revient', 'Prix Vente', 'Couleur', 
-            'Tailles', 'Quantité'
-        ];
-        
-        const rows = products.map(p => [
-            p.reference,
-            p.name,
-            p.brand,
-            p.category_fr || p.category,
-            p.price_retail,
-            p.price_cost,
-            p.color_name || p.color,
-            Array.isArray(p.sizes_available) ? p.sizes_available.join(', ') : p.sizes_available,
-            p.quantity_total
-        ]);
-        
-        // Créer le workbook
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Produits');
-        
-        // Télécharger le fichier
-        const fileName = brand ? `catalogue_${brand}_${new Date().toISOString().split('T')[0]}.xlsx` : 
-                                `catalogue_complet_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, fileName);
-    }
-}
 
-// Intégration avec le système existant
-const excelManager = new ExcelCatalogManager();
+        // Fonctions utilitaires
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
 
-// Override de la fonction loadProducts existante
-const originalLoadProducts = window.loadProducts;
-window.loadProducts = async function() {
-    try {
-        // Charger tous les produits (JSON + Excel)
-        allProducts = await excelManager.loadAllProducts();
-        filteredProducts = [...allProducts];
-        
-        console.log(`${allProducts.length} produits chargés (JSON + Excel)`);
-        
-        // Mettre à jour les options de marque
-        updateBrandOptions();
-        
-    } catch (error) {
-        console.error('Erreur lors du chargement des produits:', error);
-        showNoResults('Erreur lors du chargement des produits');
-    }
-};
+        function showProgress(percent, text) {
+            progressContainer.classList.add('active');
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
 
-// Ajouter la fonction de recherche par question
-window.answerProductQuestion = function(question) {
-    const response = excelManager.answerQuestion(question, allProducts);
-    
-    if (response.found) {
-        // Afficher les produits trouvés
-        filteredProducts = response.products;
-        renderProducts();
-        
-        // Afficher le message
-        const resultsTitle = document.getElementById('resultsTitle');
-        resultsTitle.textContent = response.message;
-    } else {
-        // Afficher le message d'erreur
-        showNoResults(response.message);
-    }
-    
-    return response;
-};
+        function hideProgress() {
+            progressContainer.classList.remove('active');
+            progressFill.style.width = '0%';
+        }
 
-// Export des fonctions pour utilisation externe
-window.ExcelCatalogManager = ExcelCatalogManager;
-window.excelManager = excelManager;
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('active');
+            setTimeout(() => {
+                successMessage.classList.remove('active');
+            }, 5000);
+        }
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('active');
+            setTimeout(() => {
+                successMessage.classList.remove('active');
+            }, 5000);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 5000);
+        }
+
+        function resetForm() {
+            selectedFile = null;
+            selectedBrand = '';
+            parsedData = null;
+            
+            brandSelect.value = '';
+            customBrand.value = '';
+            customBrandGroup.style.display = 'none';
+            fileInput.value = '';
+            fileInfo.classList.remove('active');
+            uploadBtn.disabled = true;
+            
+            hideProgress();
+        }
+
+        // Initialisation
+        displayHistory();
+    </script>
+</body>
+</html>
