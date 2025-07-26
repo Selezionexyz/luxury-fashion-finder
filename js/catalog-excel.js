@@ -1,10 +1,4 @@
 /**
-     * Fonction de conversion personnalisée (fallback)
-     */
-    convertCustomFormat(data, brand) {
-        // Utiliser la conversion standard comme fallback
-        return this.convertStandardFormat(data, brand);
-    }/**
  * catalog-excel.js - Module d'intégration Excel pour Luxury Fashion Finder
  * Gère l'import, la conversion et la recherche dans les catalogues Excel
  */
@@ -487,7 +481,7 @@ class ExcelCatalogManager {
                     // Extraire Tailles et Quantités
                     if (firstCol.includes('size:') || firstCol.includes('taglia:')) {
                         const sizes = [];
-               const quantities = {};
+                        const quantities = {};
                         let totalQty = 0;
                         
                         // Parcourir les colonnes pour trouver les tailles
@@ -521,7 +515,8 @@ class ExcelCatalogManager {
                             currentProduct.quantity_total = totalQty;
                         }
                     }
-                    / Extraire Q.Tot (quantité totale alternative)
+                    
+                    // Extraire Q.Tot (quantité totale alternative)
                     if (firstCol.includes('q.tot:') || firstCol.includes('total:')) {
                         const qty = parseInt(currentRow[1]) || 0;
                         if (qty > 0 && currentProduct.quantity_total === 0) {
@@ -555,7 +550,7 @@ class ExcelCatalogManager {
 
     /**
      * Détecte le format du fichier Excel
-    */
+     */
     detectExcelFormat(data) {
         if (!data || data.length < 2) return 'unknown';
         
@@ -584,11 +579,65 @@ class ExcelCatalogManager {
     }
 
     /**
+     * Validation des données Excel
+     */
+    validateExcelData(data) {
+        if (!data || data.length < 2) {
+            return { valid: false, message: 'Le fichier est vide ou ne contient pas de données' };
+        }
+        
+        // Récupérer les headers et les normaliser
+        const headers = data[0].map(h => h ? h.toString().toLowerCase().trim() : '');
+        
+        // Différentes variations possibles des noms de colonnes
+        const columnVariations = {
+            reference: ['référence', 'reference', 'ref', 'sku', 'code', 'codice', 'articolo', 'modello', 'cod', 'item'],
+            name: ['nom', 'name', 'produit', 'product', 'article', 'descrizione', 'description', 'modello', 'nome', 'libellé'],
+            category: ['catégorie', 'category', 'type', 'tipo', 'famille', 'gamme', 'collection', 'linea'],
+            price: ['prix', 'price', 'prezzo', 'cost', 'coût', 'tarif', 'montant', 'valore', 'euro', 'eur', '€']
+        };
+        
+        // Vérifier qu'on a au moins une colonne de chaque type requis
+        const missingTypes = [];
+        
+        for (const [type, variations] of Object.entries(columnVariations)) {
+            const found = headers.some(h => 
+                variations.some(v => h.includes(v))
+            );
+            
+            if (!found) {
+                missingTypes.push(type);
+            }
+        }
+        
+        // Si on a au moins référence/nom et prix, c'est suffisant
+        const hasMinimum = (
+            headers.some(h => columnVariations.reference.some(v => h.includes(v))) ||
+            headers.some(h => columnVariations.name.some(v => h.includes(v)))
+        ) && headers.some(h => columnVariations.price.some(v => h.includes(v)));
+        
+        if (!hasMinimum) {
+            // Afficher les colonnes trouvées pour aider l'utilisateur
+            console.log('Colonnes trouvées:', headers);
+            
+            return { 
+                valid: false, 
+                message: `Format non reconnu. Colonnes trouvées: ${headers.filter(h => h).join(', ')}. 
+                         Assurez-vous d'avoir au moins une colonne pour l'identifiant (référence, code, SKU...) 
+                         et une colonne pour le prix.` 
+            };
+        }
+        
+        return { valid: true };
+    }
+
+    /**
      * Convertit le format standard
      */
     convertStandardFormat(data, brand) {
         const headers = data[0].map(h => h ? h.toString().toLowerCase().trim() : '');
         const products = [];
+        
         // Mapper les colonnes avec plus de flexibilité
         const columnMap = {
             reference: this.findColumnIndex(headers, ['référence', 'reference', 'ref', 'sku', 'code', 'codice', 'articolo', 'modello', 'cod', 'item', 'codpro']),
@@ -627,7 +676,6 @@ class ExcelCatalogManager {
             const reference = columnMap.reference !== -1 ? 
                 row[columnMap.reference] : 
                 `${brand}_${Date.now()}_${i}`;
-            
             // Nom par défaut si pas trouvé
             const name = columnMap.name !== -1 ? 
                 row[columnMap.name] : 
@@ -650,6 +698,7 @@ class ExcelCatalogManager {
                 active: true,
                 imported_at: new Date().toISOString()
             };
+            
             // Si pas de prix de vente, utiliser le prix d'achat
             if (product.price_cost === 0 && product.price_retail > 0) {
                 product.price_cost = product.price_retail;
@@ -661,7 +710,6 @@ class ExcelCatalogManager {
                 products.push(product);
             }
         }
-        
         return products;
     }
     
@@ -683,6 +731,7 @@ class ExcelCatalogManager {
      */
     parseSizes(sizeString) {
         if (!sizeString) return ['UNI'];
+        
         const sizes = sizeString.toString()
             .split(/[,;\/]/)
             .map(s => s.trim())
@@ -730,8 +779,15 @@ class ExcelCatalogManager {
                 return value;
             }
         }
-        
         return category;
+    }
+
+    /**
+     * Fonction de conversion personnalisée (fallback)
+     */
+    convertCustomFormat(data, brand) {
+        // Utiliser la conversion standard comme fallback
+        return this.convertStandardFormat(data, brand);
     }
 
     /**
@@ -788,6 +844,7 @@ window.loadProducts = async function() {
         // Charger tous les produits (JSON + Excel)
         allProducts = await excelManager.loadAllProducts();
         filteredProducts = [...allProducts];
+        
         console.log(`${allProducts.length} produits chargés (JSON + Excel)`);
         
         // Mettre à jour les options de marque
@@ -822,3 +879,4 @@ window.answerProductQuestion = function(question) {
 // Export des fonctions pour utilisation externe
 window.ExcelCatalogManager = ExcelCatalogManager;
 window.excelManager = excelManager;
+                             
