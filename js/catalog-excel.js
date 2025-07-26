@@ -1,4 +1,10 @@
 /**
+     * Fonction de conversion personnalisée (fallback)
+     */
+    convertCustomFormat(data, brand) {
+        // Utiliser la conversion standard comme fallback
+        return this.convertStandardFormat(data, brand);
+    }/**
  * catalog-excel.js - Module d'intégration Excel pour Luxury Fashion Finder
  * Gère l'import, la conversion et la recherche dans les catalogues Excel
  */
@@ -8,17 +14,133 @@ class ExcelCatalogManager {
         this.storageKey = 'luxuryProducts';
         this.historyKey = 'importHistory';
         this.brandMappings = {
-            'GUCCI': ['gucci', 'guccio gucci'],
-            'LOUIS_VUITTON': ['louis vuitton', 'lv', 'vuitton'],
-            'HERMES': ['hermès', 'hermes'],
+            // Haute Couture
             'CHANEL': ['chanel', 'coco chanel'],
-            'DIOR': ['dior', 'christian dior'],
+            'DIOR': ['dior', 'christian dior', 'cd'],
+            'HERMES': ['hermès', 'hermes'],
+            'LOUIS_VUITTON': ['louis vuitton', 'lv', 'vuitton', 'louis v'],
+            'GUCCI': ['gucci', 'guccio gucci', 'gg'],
             'PRADA': ['prada'],
-            'BALENCIAGA': ['balenciaga'],
-            'SAINT_LAURENT': ['saint laurent', 'ysl', 'yves saint laurent'],
-            'CP_COMPANY': ['cp company', 'c.p. company', 'cp'],
-            'STONE_ISLAND': ['stone island', 'stone'],
-            'MONCLER': ['moncler']
+            'SAINT_LAURENT': ['saint laurent', 'ysl', 'yves saint laurent', 'sl'],
+            'CELINE': ['céline', 'celine'],
+            'GIVENCHY': ['givenchy'],
+            'VALENTINO': ['valentino', 'vltn'],
+            'VERSACE': ['versace'],
+            'ARMANI': ['armani', 'giorgio armani', 'emporio armani', 'ga'],
+            'DOLCE_GABBANA': ['dolce & gabbana', 'd&g', 'dolce gabbana', 'dg'],
+            'FENDI': ['fendi', 'ff'],
+            'BURBERRY': ['burberry'],
+            
+            // Streetwear & Contemporary
+            'BALENCIAGA': ['balenciaga', 'blncg'],
+            'OFF_WHITE': ['off-white', 'off white', 'ow', 'offwhite'],
+            'VETEMENTS': ['vetements'],
+            'PALM_ANGELS': ['palm angels', 'pa'],
+            'FEAR_OF_GOD': ['fear of god', 'fog', 'essentials'],
+            'AMIRI': ['amiri'],
+            'RHUDE': ['rhude'],
+            'SUPREME': ['supreme', 'sup'],
+            'BAPE': ['bape', 'a bathing ape', 'bathing ape'],
+            'KITH': ['kith'],
+            
+            // Sportswear Premium
+            'MONCLER': ['moncler'],
+            'CANADA_GOOSE': ['canada goose', 'cg'],
+            'STONE_ISLAND': ['stone island', 'si', 'stone'],
+            'CP_COMPANY': ['cp company', 'c.p. company', 'cp', 'c.p.'],
+            'MACKAGE': ['mackage'],
+            'WOOLRICH': ['woolrich'],
+            'PARAJUMPERS': ['parajumpers', 'pjs'],
+            
+            // Designers Avant-Garde
+            'RICK_OWENS': ['rick owens', 'ro', 'drkshdw'],
+            'YOHJI_YAMAMOTO': ['yohji yamamoto', 'y-3', 'yohji'],
+            'COMME_DES_GARCONS': ['comme des garcons', 'cdg', 'comme des garçons'],
+            'ISSEY_MIYAKE': ['issey miyake', 'pleats please', 'homme plissé'],
+            'MAISON_MARGIELA': ['maison margiela', 'mm6', 'margiela', 'martin margiela'],
+            'ANN_DEMEULEMEESTER': ['ann demeulemeester'],
+            'JULIUS': ['julius'],
+            'BORIS_BIDJAN_SABERI': ['boris bidjan saberi', 'bbs', '11'],
+            
+            // Accessoires & Maroquinerie
+            'BOTTEGA_VENETA': ['bottega veneta', 'bv', 'bottega'],
+            'LOEWE': ['loewe'],
+            'CHLOE': ['chloé', 'chloe'],
+            'MULBERRY': ['mulberry'],
+            'GOYARD': ['goyard'],
+            'MOYNAT': ['moynat'],
+            'DELVAUX': ['delvaux'],
+            'JUDITH_LEIBER': ['judith leiber'],
+            
+            // Chaussures de Luxe
+            'CHRISTIAN_LOUBOUTIN': ['christian louboutin', 'louboutin', 'cl'],
+            'JIMMY_CHOO': ['jimmy choo', 'jc'],
+            'MANOLO_BLAHNIK': ['manolo blahnik', 'manolo'],
+            'GIUSEPPE_ZANOTTI': ['giuseppe zanotti', 'gz'],
+            'RENE_CAOVILLA': ['rené caovilla', 'rene caovilla'],
+            'AQUAZZURA': ['aquazzura'],
+            'GIANVITO_ROSSI': ['gianvito rossi'],
+            'ROGER_VIVIER': ['roger vivier', 'rv'],
+            
+            // Bijoux & Horlogerie
+            'CARTIER': ['cartier'],
+            'BULGARI': ['bulgari', 'bvlgari'],
+            'VAN_CLEEF': ['van cleef & arpels', 'vca', 'van cleef'],
+            'TIFFANY': ['tiffany & co', 'tiffany', 'tiffany & co.'],
+            'CHOPARD': ['chopard'],
+            'BOUCHERON': ['boucheron'],
+            'PIAGET': ['piaget'],
+            'ROLEX': ['rolex'],
+            'PATEK_PHILIPPE': ['patek philippe', 'patek'],
+            'AUDEMARS_PIGUET': ['audemars piguet', 'ap', 'royal oak'],
+            
+            // Marques Émergentes
+            'JACQUEMUS': ['jacquemus'],
+            'GANNI': ['ganni'],
+            'STAUD': ['staud'],
+            'NANUSHKA': ['nanushka'],
+            'REJINA_PYO': ['rejina pyo'],
+            'ROTATE': ['rotate'],
+            'RIXO': ['rixo'],
+            'THE_ATTICO': ['the attico', 'attico'],
+            
+            // Mode Homme
+            'TOM_FORD': ['tom ford', 'tf'],
+            'BERLUTI': ['berluti'],
+            'BRUNELLO_CUCINELLI': ['brunello cucinelli', 'bc'],
+            'KITON': ['kiton'],
+            'LORO_PIANA': ['loro piana', 'lp'],
+            'BRIONI': ['brioni'],
+            'ZEGNA': ['ermenegildo zegna', 'zegna', 'ez'],
+            'CANALI': ['canali'],
+            'CORNELIANI': ['corneliani'],
+            
+            // Américaines
+            'RALPH_LAUREN': ['ralph lauren', 'rl', 'polo ralph lauren', 'polo'],
+            'CALVIN_KLEIN': ['calvin klein', 'ck'],
+            'TOMMY_HILFIGER': ['tommy hilfiger', 'tommy', 'th'],
+            'MICHAEL_KORS': ['michael kors', 'mk', 'kors'],
+            'MARC_JACOBS': ['marc jacobs', 'mj'],
+            'COACH': ['coach'],
+            'KATE_SPADE': ['kate spade', 'ks'],
+            'TORY_BURCH': ['tory burch', 'tb'],
+            
+            // Autres Marques Premium
+            'ALEXANDER_MCQUEEN': ['alexander mcqueen', 'mcqueen', 'amq'],
+            'STELLA_MCCARTNEY': ['stella mccartney'],
+            'KENZO': ['kenzo'],
+            'ACNE_STUDIOS': ['acne studios', 'acne'],
+            'ISABEL_MARANT': ['isabel marant', 'im'],
+            'BALMAIN': ['balmain'],
+            'DSQUARED2': ['dsquared2', 'dsquared', 'd2'],
+            'GOLDEN_GOOSE': ['golden goose', 'ggdb'],
+            'MIUMIU': ['miu miu', 'miumiu'],
+            'ETRO': ['etro'],
+            'MISSONI': ['missoni'],
+            'ROBERTO_CAVALLI': ['roberto cavalli', 'cavalli'],
+            'PHILIPP_PLEIN': ['philipp plein', 'pp'],
+            'MCM': ['mcm', 'mode creation munich'],
+            'FURLA': ['furla']
         };
     }
 
@@ -259,31 +381,205 @@ class ExcelCatalogManager {
         const format = this.detectExcelFormat(excelData);
         
         switch (format) {
+            case 'grouped-format':
+                return this.convertGroupedFormat(excelData, brand);
             case 'standard':
                 return this.convertStandardFormat(excelData, brand);
+            case 'italian':
+                return this.convertItalianFormat(excelData, brand);
             case 'custom':
                 return this.convertCustomFormat(excelData, brand);
             default:
-                throw new Error('Format de fichier non reconnu');
+                // Essayer la conversion standard par défaut
+                return this.convertStandardFormat(excelData, brand);
         }
+    }
+    
+    /**
+     * Convertit le format groupé (Stone Island, etc.)
+     */
+    convertGroupedFormat(data, brand) {
+        const products = [];
+        let currentProduct = null;
+        let productId = 1;
+        
+        // Parcourir toutes les lignes
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row.length === 0) continue;
+            
+            // Chercher les indicateurs de produit
+            const firstCell = row[0] ? row[0].toString() : '';
+            
+            // Nouveau produit commence par "Brand:"
+            if (firstCell.toLowerCase().includes('brand:')) {
+                // Sauvegarder le produit précédent s'il existe
+                if (currentProduct && currentProduct.reference) {
+                    products.push(currentProduct);
+                }
+                
+                // Extraire les informations du produit
+                currentProduct = {
+                    id: `${brand}_EXCEL_${productId++}`,
+                    brand: brand,
+                    reference: '',
+                    name: '',
+                    category: '',
+                    category_fr: '',
+                    price_retail: 0,
+                    price_cost: 0,
+                    currency: 'EUR',
+                    color_name: '',
+                    sizes_available: [],
+                    quantity_total: 0,
+                    quantity_by_size: {},
+                    source: 'excel',
+                    active: true,
+                    imported_at: new Date().toISOString()
+                };
+                
+                // Parcourir les lignes suivantes pour ce produit
+                let j = i;
+                while (j < data.length && (!data[j][0] || !data[j][0].toString().toLowerCase().includes('brand:'))) {
+                    const currentRow = data[j];
+                    if (!currentRow) {
+                        j++;
+                        continue;
+                    }
+                    
+                    const firstCol = currentRow[0] ? currentRow[0].toString().toLowerCase() : '';
+                    
+                    // Extraire Code/Codice
+                    if (firstCol.includes('code:') || firstCol.includes('codice:')) {
+                        currentProduct.reference = currentRow[1] || '';
+                    }
+                    
+                    // Extraire Description/Descrizione
+                    if (firstCol.includes('description:') || firstCol.includes('descrizione:')) {
+                        currentProduct.name = currentRow[1] || '';
+                        currentProduct.category_fr = this.translateCategory(currentRow[1]);
+                    }
+                    
+                    // Extraire Prix (Costo/Cost/Prix)
+                    if (firstCol.includes('costo:') || firstCol.includes('cost:') || firstCol.includes('prix:')) {
+                        const price = parseFloat(currentRow[1]) || 0;
+                        currentProduct.price_retail = price;
+                        
+                        // Chercher le prix de vente (Retail)
+                        if (currentRow[2] && currentRow[2].toString().toLowerCase().includes('retail:')) {
+                            currentProduct.price_cost = parseFloat(currentRow[3]) || price * 1.3;
+                        } else {
+                            // Sinon ajouter une marge par défaut
+                            currentProduct.price_cost = Math.round(price * 1.3);
+                        }
+                    }
+                    
+                    // Extraire Couleur (dans différentes positions possibles)
+                    for (let k = 0; k < currentRow.length; k++) {
+                        if (currentRow[k] && currentRow[k].toString().toLowerCase().includes('color:')) {
+                            if (k + 1 < currentRow.length) {
+                                currentProduct.color_name = currentRow[k + 1] || '';
+                            }
+                            break;
+                        }
+                    }
+                    
+                    // Extraire Tailles et Quantités
+                    if (firstCol.includes('size:') || firstCol.includes('taglia:')) {
+                        const sizes = [];
+               const quantities = {};
+                        let totalQty = 0;
+                        
+                        // Parcourir les colonnes pour trouver les tailles
+                        for (let k = 1; k < currentRow.length; k++) {
+                            if (currentRow[k] && currentRow[k] !== 'UNICA' && currentRow[k] !== 'UNI') {
+                                sizes.push(currentRow[k].toString());
+                            } else if (currentRow[k] === 'UNICA' || currentRow[k] === 'UNI') {
+                                sizes.push('UNI');
+                            }
+                        }
+                        
+                        // Chercher la ligne Qty
+                        if (j + 1 < data.length) {
+                            const nextRow = data[j + 1];
+                            if (nextRow && nextRow[0] && nextRow[0].toString().toLowerCase().includes('qty:')) {
+                                for (let k = 1; k < nextRow.length && k - 1 < sizes.length; k++) {
+                                    if (nextRow[k]) {
+                                        const qty = parseInt(nextRow[k]) || 0;
+                                        if (qty > 0) {
+                                            quantities[sizes[k - 1]] = qty;
+                                            totalQty += qty;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (sizes.length > 0) {
+                            currentProduct.sizes_available = sizes;
+                            currentProduct.quantity_by_size = quantities;
+                            currentProduct.quantity_total = totalQty;
+                        }
+                    }
+                    / Extraire Q.Tot (quantité totale alternative)
+                    if (firstCol.includes('q.tot:') || firstCol.includes('total:')) {
+                        const qty = parseInt(currentRow[1]) || 0;
+                        if (qty > 0 && currentProduct.quantity_total === 0) {
+                            currentProduct.quantity_total = qty;
+                        }
+                    }
+                    
+                    j++;
+                }
+                
+                // Mettre à jour l'index pour continuer après ce produit
+                i = j - 1;
+            }
+        }
+        
+        // Ajouter le dernier produit
+        if (currentProduct && currentProduct.reference) {
+            products.push(currentProduct);
+        }
+        
+        return products;
+    }
+    
+    /**
+     * Convertit le format italien
+     */
+    convertItalianFormat(data, brand) {
+        // Utiliser la conversion standard avec les bons mappings
+        return this.convertStandardFormat(data, brand);
     }
 
     /**
      * Détecte le format du fichier Excel
-     */
+    */
     detectExcelFormat(data) {
         if (!data || data.length < 2) return 'unknown';
         
         const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
         
-        // Format standard : référence, nom, catégorie, prix
-        if (headers.some(h => h.includes('référence')) && 
-            headers.some(h => h.includes('nom')) &&
-            headers.some(h => h.includes('prix'))) {
+        // Format groupé (Stone Island, etc.) : Brand, Code, Description en colonnes fixes
+        if (data.some(row => row && row[0] && row[0].toString().toLowerCase().includes('brand:'))) {
+            return 'grouped-format';
+        }
+        
+        // Format standard : référence, nom, catégorie, prix en headers
+        if (headers.some(h => h.includes('référence') || h.includes('reference') || h.includes('ref')) && 
+            headers.some(h => h.includes('nom') || h.includes('name') || h.includes('produit')) &&
+            headers.some(h => h.includes('prix') || h.includes('price'))) {
             return 'standard';
         }
         
-        // Format personnalisé : à adapter selon vos besoins
+        // Format avec colonnes italiennes
+        if (headers.some(h => h.includes('codice') || h.includes('articolo')) && 
+            headers.some(h => h.includes('prezzo') || h.includes('costo'))) {
+            return 'italian';
+        }
+        
+        // Format personnalisé : utiliser la détection intelligente
         return 'custom';
     }
 
@@ -291,51 +587,95 @@ class ExcelCatalogManager {
      * Convertit le format standard
      */
     convertStandardFormat(data, brand) {
-        const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
+        const headers = data[0].map(h => h ? h.toString().toLowerCase().trim() : '');
         const products = [];
-        
-        // Mapper les colonnes
+        // Mapper les colonnes avec plus de flexibilité
         const columnMap = {
-            reference: headers.findIndex(h => h.includes('référence') || h.includes('ref') || h.includes('sku')),
-            name: headers.findIndex(h => h.includes('nom') || h.includes('name') || h.includes('produit') || h.includes('article')),
-            category: headers.findIndex(h => h.includes('catégorie') || h.includes('category') || h.includes('type')),
-            price_retail: headers.findIndex(h => h.includes('prix achat') || h.includes('prix revient') || h.includes('cost')),
-            price_cost: headers.findIndex(h => h.includes('prix vente') || h.includes('prix') || h.includes('price')),
-            color: headers.findIndex(h => h.includes('couleur') || h.includes('color')),
-            sizes: headers.findIndex(h => h.includes('taille') || h.includes('size')),
-            quantity: headers.findIndex(h => h.includes('quantité') || h.includes('quantity') || h.includes('stock'))
+            reference: this.findColumnIndex(headers, ['référence', 'reference', 'ref', 'sku', 'code', 'codice', 'articolo', 'modello', 'cod', 'item', 'codpro']),
+            name: this.findColumnIndex(headers, ['nom', 'name', 'produit', 'product', 'article', 'descrizione', 'description', 'modello', 'nome', 'libellé', 'designation']),
+            category: this.findColumnIndex(headers, ['catégorie', 'category', 'type', 'tipo', 'famille', 'gamme', 'collection', 'linea', 'gruppo']),
+            price_retail: this.findColumnIndex(headers, ['prix achat', 'prix revient', 'cost', 'costo', 'buy', 'wholesale']),
+            price_cost: this.findColumnIndex(headers, ['prix vente', 'prix', 'price', 'prezzo', 'sell', 'retail', 'pvp', 'euro', 'eur', '€']),
+            color: this.findColumnIndex(headers, ['couleur', 'color', 'colore', 'teinte', 'coloris', 'col']),
+            sizes: this.findColumnIndex(headers, ['taille', 'size', 'taglia', 'misura', 'pointure']),
+            quantity: this.findColumnIndex(headers, ['quantité', 'quantity', 'qté', 'qty', 'stock', 'disponible', 'disponibilità', 'giacenza', 'qta'])
         };
+        
+        // Si on n'a pas trouvé de colonne prix vente, chercher n'importe quelle colonne avec un nombre
+        if (columnMap.price_cost === -1) {
+            // Parcourir la première ligne de données pour trouver une colonne avec des nombres
+            if (data.length > 1) {
+                const firstDataRow = data[1];
+                for (let i = 0; i < headers.length; i++) {
+                    const value = firstDataRow[i];
+                    if (value && !isNaN(parseFloat(value))) {
+                        // C'est probablement une colonne de prix
+                        columnMap.price_cost = i;
+                        console.log(`Colonne prix détectée automatiquement: ${headers[i]}`);
+                        break;
+                    }
+                }
+            }
+        }
         
         // Parcourir les lignes
         for (let i = 1; i < data.length; i++) {
             const row = data[i];
-            if (!row || row.length === 0) continue;
+            if (!row || row.length === 0 || row.every(cell => !cell)) continue;
+            
+            // Créer un identifiant unique si pas de référence
+            const reference = columnMap.reference !== -1 ? 
+                row[columnMap.reference] : 
+                `${brand}_${Date.now()}_${i}`;
+            
+            // Nom par défaut si pas trouvé
+            const name = columnMap.name !== -1 ? 
+                row[columnMap.name] : 
+                `Produit ${i}`;
             
             const product = {
                 id: `${brand}_EXCEL_${i}`,
                 brand: brand,
-                reference: row[columnMap.reference] || `${brand}_${i}`,
-                name: row[columnMap.name] || 'Produit sans nom',
-                category: row[columnMap.category] || 'Non catégorisé',
-                category_fr: this.translateCategory(row[columnMap.category]),
-                price_retail: parseFloat(row[columnMap.price_retail]) || 0,
-                price_cost: parseFloat(row[columnMap.price_cost]) || 0,
+                reference: reference || `${brand}_${i}`,
+                name: name || 'Produit sans nom',
+                category: columnMap.category !== -1 ? row[columnMap.category] : 'Non catégorisé',
+                category_fr: columnMap.category !== -1 ? this.translateCategory(row[columnMap.category]) : 'Non catégorisé',
+                price_retail: columnMap.price_retail !== -1 ? parseFloat(row[columnMap.price_retail]) || 0 : 0,
+                price_cost: columnMap.price_cost !== -1 ? parseFloat(row[columnMap.price_cost]) || 0 : 0,
                 currency: 'EUR',
-                color_name: row[columnMap.color] || '',
-                sizes_available: this.parseSizes(row[columnMap.sizes]),
-                quantity_total: parseInt(row[columnMap.quantity]) || 0,
+                color_name: columnMap.color !== -1 ? row[columnMap.color] : '',
+                sizes_available: columnMap.sizes !== -1 ? this.parseSizes(row[columnMap.sizes]) : ['UNI'],
+                quantity_total: columnMap.quantity !== -1 ? parseInt(row[columnMap.quantity]) || 0 : 0,
                 source: 'excel',
                 active: true,
                 imported_at: new Date().toISOString()
             };
+            // Si pas de prix de vente, utiliser le prix d'achat
+            if (product.price_cost === 0 && product.price_retail > 0) {
+                product.price_cost = product.price_retail;
+            }
             
-            // Valider le produit
-            if (product.reference && product.name !== 'Produit sans nom') {
+            // Valider le produit (plus flexible)
+            if ((product.reference && product.reference !== `${brand}_${i}`) || 
+                (product.name && product.name !== 'Produit sans nom' && product.name !== `Produit ${i}`)) {
                 products.push(product);
             }
         }
         
         return products;
+    }
+    
+    /**
+     * Trouve l'index d'une colonne en testant plusieurs variations
+     */
+    findColumnIndex(headers, variations) {
+        for (let i = 0; i < headers.length; i++) {
+            const header = headers[i];
+            if (variations.some(v => header.includes(v))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -343,7 +683,6 @@ class ExcelCatalogManager {
      */
     parseSizes(sizeString) {
         if (!sizeString) return ['UNI'];
-        
         const sizes = sizeString.toString()
             .split(/[,;\/]/)
             .map(s => s.trim())
@@ -362,6 +701,9 @@ class ExcelCatalogManager {
             'bag': 'Sacs',
             'bags': 'Sacs',
             'sac': 'Sacs',
+            'cap': 'Casquettes',
+            'cappello': 'Casquettes',
+            'baseball cap': 'Casquettes',
             'sweat': 'Sweats',
             'sweater': 'Sweats',
             'hoodie': 'Sweats',
@@ -372,11 +714,13 @@ class ExcelCatalogManager {
             'pantalon': 'Pantalons',
             'jeans': 'Jeans',
             'shirt': 'Chemises',
-            'tshirt': 'T-shirts',
             't-shirt': 'T-shirts',
+            'tshirt': 'T-shirts',
+            'tee': 'T-shirts',
             'shoes': 'Chaussures',
             'sneakers': 'Baskets',
-            'accessories': 'Accessoires'
+            'accessories': 'Accessoires',
+            'polo': 'Polos'
         };
         
         const categoryLower = category.toLowerCase();
@@ -444,7 +788,6 @@ window.loadProducts = async function() {
         // Charger tous les produits (JSON + Excel)
         allProducts = await excelManager.loadAllProducts();
         filteredProducts = [...allProducts];
-        
         console.log(`${allProducts.length} produits chargés (JSON + Excel)`);
         
         // Mettre à jour les options de marque
