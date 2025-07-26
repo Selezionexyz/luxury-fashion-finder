@@ -557,9 +557,9 @@
                 parsedData = data;
                 
                 showProgress(50, 'Analyse des données...');
-                
+    
                 // Valider les données
-                const validation = validateExcelData(data);
+const validation = excelManager.validateExcelData(data);
                 if (!validation.valid) {
                     showError(`Erreur dans le fichier: ${validation.message}`);
                     hideProgress();
@@ -641,7 +641,8 @@
         }
 
         // Conversion au format produit
-        function convertToProductFormat(data, brand) {
+        // Convertir au format JSON
+const products = excelManager.normalizeExcelData(data, brand);
             const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
             const products = [];
             
@@ -821,5 +822,7 @@
         // Initialisation
         displayHistory();
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/catalog-excel.js"></script>
 </body>
 </html>
