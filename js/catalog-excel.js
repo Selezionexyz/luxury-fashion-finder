@@ -266,7 +266,6 @@ class ExcelCatalogManager {
         
         return results.map(r => r.product);
     }
-
     /**
      * Recherche par question naturelle
      */
@@ -390,29 +389,38 @@ class ExcelCatalogManager {
     }
     
     /**
-     * Convertit le format groupé (Stone Island, etc.)
+     * Convertit le format groupé (Stone Island, Moncler, etc.)
      */
     convertGroupedFormat(data, brand) {
         const products = [];
         let currentProduct = null;
         let productId = 1;
         
+        console.log('Converting grouped format for brand:', brand);
+        console.log('Total rows:', data.length);
+        
         // Parcourir toutes les lignes
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             if (!row || row.length === 0) continue;
             
-            // Chercher les indicateurs de produit
-            const firstCell = row[0] ? row[0].toString() : '';
+            // Chercher "Brand:" dans n'importe quelle cellule de la ligne
+            let brandCellIndex = -1;
+            for (let j = 0; j < row.length; j++) {
+                if (row[j] && row[j].toString().toLowerCase().includes('brand:')) {
+                    brandCellIndex = j;
+                    break;
+                }
+            }
             
-            // Nouveau produit commence par "Brand:"
-            if (firstCell.toLowerCase().includes('brand:')) {
+            // Nouveau produit trouvé
+            if (brandCellIndex !== -1) {
                 // Sauvegarder le produit précédent s'il existe
                 if (currentProduct && currentProduct.reference) {
                     products.push(currentProduct);
                 }
                 
-                // Extraire les informations du produit
+                // Initialiser un nouveau produit
                 currentProduct = {
                     id: `${brand}_EXCEL_${productId++}`,
                     brand: brand,
@@ -434,93 +442,118 @@ class ExcelCatalogManager {
                 
                 // Parcourir les lignes suivantes pour ce produit
                 let j = i;
-                while (j < data.length && (!data[j][0] || !data[j][0].toString().toLowerCase().includes('brand:'))) {
+                while (j < data.length) {
                     const currentRow = data[j];
                     if (!currentRow) {
                         j++;
                         continue;
                     }
                     
-                    const firstCol = currentRow[0] ? currentRow[0].toString().toLowerCase() : '';
-                    
-                    // Extraire Code/Codice
-                    if (firstCol.includes('code:') || firstCol.includes('codice:')) {
-                        currentProduct.reference = currentRow[1] || '';
-                    }
-                    
-                    // Extraire Description/Descrizione
-                    if (firstCol.includes('description:') || firstCol.includes('descrizione:')) {
-                        currentProduct.name = currentRow[1] || '';
-                        currentProduct.category_fr = this.translateCategory(currentRow[1]);
-                    }
-                    
-                    // Extraire Prix (Costo/Cost/Prix)
-                    if (firstCol.includes('costo:') || firstCol.includes('cost:') || firstCol.includes('prix:')) {
-                        const price = parseFloat(currentRow[1]) || 0;
-                        currentProduct.price_retail = price;
-                        
-                        // Chercher le prix de vente (Retail)
-                        if (currentRow[2] && currentRow[2].toString().toLowerCase().includes('retail:')) {
-                            currentProduct.price_cost = parseFloat(currentRow[3]) || price * 1.3;
-                        } else {
-                            // Sinon ajouter une marge par défaut
-                            currentProduct.price_cost = Math.round(price * 1.3);
-                        }
-                    }
-                    
-                    // Extraire Couleur (dans différentes positions possibles)
+                    // Vérifier si on arrive à un nouveau produit
+                    let hasNewBrand = false;
                     for (let k = 0; k < currentRow.length; k++) {
-                        if (currentRow[k] && currentRow[k].toString().toLowerCase().includes('color:')) {
-                            if (k + 1 < currentRow.length) {
-                                currentProduct.color_name = currentRow[k + 1] || '';
-                            }
+                        if (currentRow[k] && currentRow[k].toString().toLowerCase().includes('brand:') && j > i) {
+                            hasNewBrand = true;
                             break;
                         }
                     }
+                    if (hasNewBrand) break;
                     
-                    // Extraire Tailles et Quantités
-                    if (firstCol.includes('size:') || firstCol.includes('taglia:')) {
-                        const sizes = [];
-                        const quantities = {};
-                        let totalQty = 0;
+                    // Parcourir toutes les cellules de la ligne pour trouver les informations
+                    for (let k = 0; k < currentRow.length; k++) {
+                        const cell = currentRow[k];
+                        if (!cell) continue;
                         
-                        // Parcourir les colonnes pour trouver les tailles
-                        for (let k = 1; k < currentRow.length; k++) {
-                            if (currentRow[k] && currentRow[k] !== 'UNICA' && currentRow[k] !== 'UNI') {
-                                sizes.push(currentRow[k].toString());
-                            } else if (currentRow[k] === 'UNICA' || currentRow[k] === 'UNI') {
-                                sizes.push('UNI');
+                        const cellValue = cell.toString().toLowerCase();
+                        
+                        // Code
+                        if (cellValue.includes('code:') && k + 1 < currentRow.length) {
+                            currentProduct.reference = currentRow[k + 1] || '';
+                        }
+                        
+                        // Description
+                        if (cellValue.includes('description:') && k + 1 < currentRow.length) {
+                            currentProduct.name = currentRow[k + 1] || '';
+                            currentProduct.category_fr = this.translateCategory(currentRow[k + 1]);
+                        }
+                        
+                        // Costo (prix d'achat)
+                        if (cellValue.includes('costo:') && k + 1 < currentRow.length) {
+                            const price = parseFloat(currentRow[k + 1]) || 0;
+                            currentProduct.price_retail = price;
+                            
+                            // Chercher Retail dans la même ligne
+                            for (let m = k + 2; m < currentRow.length; m++) {
+                                if (currentRow[m] && currentRow[m].toString().toLowerCase().includes('retail:') && m + 1 < currentRow.length) {
+                                    currentProduct.price_cost = parseFloat(currentRow[m + 1]) || price * 1.3;
+                                    break;
+                                }
+                            }
+                            
+                            // Si pas de retail trouvé, appliquer la marge
+                            if (currentProduct.price_cost === 0) {
+                                currentProduct.price_cost = Math.round(price * 1.3);
                             }
                         }
                         
-                        // Chercher la ligne Qty
-                        if (j + 1 < data.length) {
-                            const nextRow = data[j + 1];
-                            if (nextRow && nextRow[0] && nextRow[0].toString().toLowerCase().includes('qty:')) {
-                                for (let k = 1; k < nextRow.length && k - 1 < sizes.length; k++) {
-                                    if (nextRow[k]) {
-                                        const qty = parseInt(nextRow[k]) || 0;
-                                        if (qty > 0) {
-                                            quantities[sizes[k - 1]] = qty;
-                                            totalQty += qty;
+                        // Color
+                        if (cellValue.includes('color:') && k + 1 < currentRow.length) {
+                            currentProduct.color_name = currentRow[k + 1] || '';
+                        }
+                        
+                        // Size
+                        if (cellValue.includes('size:')) {
+                            const sizes = [];
+                            const quantities = {};
+                            let totalQty = 0;
+                            
+                            // Collecter toutes les tailles sur cette ligne
+                            for (let m = k + 1; m < currentRow.length; m++) {
+                                if (currentRow[m] && !isNaN(currentRow[m]) && currentRow[m].toString().length <= 3) {
+                                    sizes.push(currentRow[m].toString());
+                                } else if (currentRow[m] === 'UNICA' || currentRow[m] === 'UNI') {
+                                    sizes.push('UNI');
+                                } else if (currentRow[m] && currentRow[m].toString().match(/^\d+\+?$/)) {
+                                    // Gérer les tailles comme "39+", "40+"
+                                    sizes.push(currentRow[m].toString());
+                                }
+                            }
+                            
+                            // Chercher la ligne Qty
+                            if (j + 1 < data.length) {
+                                const nextRow = data[j + 1];
+                                if (nextRow) {
+                                    for (let n = 0; n < nextRow.length; n++) {
+                                        if (nextRow[n] && nextRow[n].toString().toLowerCase().includes('qty:')) {
+                                            // Collecter les quantités
+                                            for (let m = n + 1; m < nextRow.length && m - n - 1 < sizes.length; m++) {
+                                                if (nextRow[m]) {
+                                                    const qty = parseInt(nextRow[m]) || 0;
+                                                    if (qty > 0 && sizes[m - n - 1]) {
+                                                        quantities[sizes[m - n - 1]] = qty;
+                                                        totalQty += qty;
+                                                    }
+                                                }
+                                            }
+                                            break;
                                         }
                                     }
                                 }
                             }
+                            
+                            if (sizes.length > 0) {
+                                currentProduct.sizes_available = sizes;
+                                currentProduct.quantity_by_size = quantities;
+                                currentProduct.quantity_total = totalQty;
+                            }
                         }
                         
-                        if (sizes.length > 0) {
-                            currentProduct.sizes_available = sizes;
-                            currentProduct.quantity_by_size = quantities;
-                            currentProduct.quantity_total = totalQty;
-                        }
-                    }
-                    
-                    // Extraire Q.Tot (quantité totale alternative)
-                    if (firstCol.includes('q.tot:') || firstCol.includes('total:')) {
-                        const qty = parseInt(currentRow[1]) || 0;
-                        if (qty > 0 && currentProduct.quantity_total === 0) {
-                            currentProduct.quantity_total = qty;
+                        // Q.Tot
+                        if (cellValue.includes('q.tot:') && k + 1 < currentRow.length) {
+                            const qty = parseInt(currentRow[k + 1]) || 0;
+                            if (qty > 0 && currentProduct.quantity_total === 0) {
+                                currentProduct.quantity_total = qty;
+                            }
                         }
                     }
                     
@@ -537,9 +570,9 @@ class ExcelCatalogManager {
             products.push(currentProduct);
         }
         
+        console.log('Total products found:', products.length);
         return products;
     }
-    
     /**
      * Convertit le format italien
      */
@@ -554,12 +587,21 @@ class ExcelCatalogManager {
     detectExcelFormat(data) {
         if (!data || data.length < 2) return 'unknown';
         
-        const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
-        
-        // Format groupé (Stone Island, etc.) : Brand, Code, Description en colonnes fixes
-        if (data.some(row => row && row[0] && row[0].toString().toLowerCase().includes('brand:'))) {
-            return 'grouped-format';
+        // Pour chaque ligne, vérifier si elle contient "Brand:"
+        for (let i = 0; i < Math.min(data.length, 10); i++) {
+            const row = data[i];
+            if (row && Array.isArray(row)) {
+                for (let j = 0; j < row.length; j++) {
+                    if (row[j] && row[j].toString().toLowerCase().includes('brand:')) {
+                        console.log('Detected grouped format at row', i, 'column', j);
+                        return 'grouped-format';
+                    }
+                }
+            }
         }
+        
+        // Vérifier les headers pour le format standard
+        const headers = data[0].map(h => h ? h.toString().toLowerCase() : '');
         
         // Format standard : référence, nom, catégorie, prix en headers
         if (headers.some(h => h.includes('référence') || h.includes('reference') || h.includes('ref')) && 
@@ -586,7 +628,16 @@ class ExcelCatalogManager {
             return { valid: false, message: 'Le fichier est vide ou ne contient pas de données' };
         }
         
-        // Récupérer les headers et les normaliser
+        // Détection du format
+        const format = this.detectExcelFormat(data);
+        console.log('Format détecté:', format);
+        
+        // Si c'est un format groupé, on le considère comme valide
+        if (format === 'grouped-format') {
+            return { valid: true };
+        }
+        
+        // Pour les autres formats, vérifier les headers
         const headers = data[0].map(h => h ? h.toString().toLowerCase().trim() : '');
         
         // Différentes variations possibles des noms de colonnes
@@ -616,7 +667,7 @@ class ExcelCatalogManager {
             headers.some(h => columnVariations.name.some(v => h.includes(v)))
         ) && headers.some(h => columnVariations.price.some(v => h.includes(v)));
         
-        if (!hasMinimum) {
+        if (!hasMinimum && format !== 'grouped-format') {
             // Afficher les colonnes trouvées pour aider l'utilisateur
             console.log('Colonnes trouvées:', headers);
             
@@ -676,6 +727,7 @@ class ExcelCatalogManager {
             const reference = columnMap.reference !== -1 ? 
                 row[columnMap.reference] : 
                 `${brand}_${Date.now()}_${i}`;
+            
             // Nom par défaut si pas trouvé
             const name = columnMap.name !== -1 ? 
                 row[columnMap.name] : 
@@ -710,6 +762,7 @@ class ExcelCatalogManager {
                 products.push(product);
             }
         }
+        
         return products;
     }
     
@@ -739,7 +792,6 @@ class ExcelCatalogManager {
         
         return sizes.length > 0 ? sizes : ['UNI'];
     }
-
     /**
      * Traduit les catégories
      */
@@ -753,6 +805,15 @@ class ExcelCatalogManager {
             'cap': 'Casquettes',
             'cappello': 'Casquettes',
             'baseball cap': 'Casquettes',
+            'hat': 'Chapeaux',
+            'calzature': 'Chaussures',
+            'sneaker': 'Baskets',
+            'sneakers': 'Baskets',
+            'shoe': 'Chaussures',
+            'shoes': 'Chaussures',
+            'boot': 'Bottes',
+            'boots': 'Bottes',
+            'rain boot': 'Bottes de pluie',
             'sweat': 'Sweats',
             'sweater': 'Sweats',
             'hoodie': 'Sweats',
@@ -766,8 +827,6 @@ class ExcelCatalogManager {
             't-shirt': 'T-shirts',
             'tshirt': 'T-shirts',
             'tee': 'T-shirts',
-            'shoes': 'Chaussures',
-            'sneakers': 'Baskets',
             'accessories': 'Accessoires',
             'polo': 'Polos'
         };
@@ -779,6 +838,7 @@ class ExcelCatalogManager {
                 return value;
             }
         }
+        
         return category;
     }
 
@@ -879,4 +939,3 @@ window.answerProductQuestion = function(question) {
 // Export des fonctions pour utilisation externe
 window.ExcelCatalogManager = ExcelCatalogManager;
 window.excelManager = excelManager;
-                             
